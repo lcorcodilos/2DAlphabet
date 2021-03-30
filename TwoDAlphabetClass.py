@@ -1295,25 +1295,26 @@ class TwoDAlphabet:
                                 binRRV = RooConstVar(fail_bin_name, fail_bin_name, bin_content)
 
                             else:
+                                binRCV = RooConstVar(fail_bin_name+'_content', fail_bin_name+'_content', bin_content)
+                                transform_parameter = RooRealVar(fail_bin_name,fail_bin_name, 0)
+                                
                                 if bin_content < 1: # Give larger floating to range to bins with fewer events
-                                    binRRV = RooRealVar(fail_bin_name, fail_bin_name, max(bin_content,0.1), 1e-9, 10)
+                                    exp_transform = "{0}*({1}/{0})**@0".format(bin_content, 10)
                                     print fail_bin_name + ' < 1'
 
                                 elif bin_content < 10: # Give larger floating to range to bins with fewer events
-                                    binRRV = RooRealVar(fail_bin_name, fail_bin_name, max(bin_content,1), 1e-9, 50)
+                                    exp_transform = "{0}*({1}/{0})**@0".format(bin_content, bin_content+bin_err_up)
                                     print fail_bin_name + ' < 10'
                                 else:
-                                    binRRV = RooRealVar(fail_bin_name, fail_bin_name, bin_content, max(1e-9,bin_range_down), bin_range_up)
+                                    exp_transform = "{0}*({1}/{0})**@0".format(bin_content, bin_content+bin_err_up)
 
-                                if bin_content - bin_err_down < 0.0001:
-                                    bin_err_down = bin_content - 0.0001 # For the edge case when bin error is larger than the content
-                                
-                                binRRV.setAsymError(bin_err_down,bin_err_up)
+                                binRRV = RooFormulaVar(fail_bin_name+'_transform', fail_bin_name+'_transform', exp_transform, RooArgList(transform_parameter))
                                 self.floatingBins.append(fail_bin_name)
+                                self.allVars.append(binRCV)
 
                             # Store the bin
                             bin_list_fail.add(binRRV)
-                            self.allVars.append(binRRV)
+                            self.allVars.extend([binRRV,transform_parameter])
 
                             # And now get the Rpf function value for this bin 
                             this_rpf = self.rpf.Eval(this_full_xbin,ybin)
@@ -1382,10 +1383,8 @@ class TwoDAlphabet:
                             fail_bin_name = 'Fail_bin_'+str(this_full_xbin)+'-'+str(ybin)+'_'+self.name
                             pass_bin_name = 'Pass_bin_'+str(this_full_xbin)+'-'+str(ybin)+'_'+self.name+'_'+v
 
-                            binRRV = bin_list_fail.find(fail_bin_name)
-                            bin_content = binRRV.getValV()
                             # If fail bin content is <= 0, treat this bin as a RooConstVar at value close to 0
-                            if isinstance(binRRV,RooConstVar):# or (this_pass_bin_zero == True):
+                            if isinstance(bin_list_fail.find(fail_bin_name+'_transform'),RooConstVar):# or (this_pass_bin_zero == True):
                                 this_bin_pass = RooConstVar(pass_bin_name, pass_bin_name, 1e-9)
                                 bin_list_pass.add(this_bin_pass)
                                 self.allVars.append(this_bin_pass)
@@ -1396,7 +1395,7 @@ class TwoDAlphabet:
                                 mc_ratio_var = RooConstVar("mc_ratio_"+v+"_x_"+str(this_full_xbin)+'-'+str(ybin)+'_'+self.name, 
                                                            "mc_ratio_"+v+"_x_"+str(this_full_xbin)+'-'+str(ybin)+'_'+self.name, 
                                                            TH2_qcdmc_ratios[c+'_'+v].GetBinContent(xbin,ybin))
-                                formula_arg_list = RooArgList(binRRV,this_rpf,mc_ratio_var)
+                                formula_arg_list = RooArgList(bin_list_fail.find(fail_bin_name+'_transform'),this_rpf,mc_ratio_var)
                                 this_bin_pass = RooFormulaVar(pass_bin_name, pass_bin_name, "@0*@1*@2",formula_arg_list)
                                 
                                 bin_list_pass.add(this_bin_pass)
