@@ -82,9 +82,10 @@ elif 'VL' in options.signals:
 
 if 'bprime' in options.signals:
     label = "B'"
+    assoc = options.mod
     theory_var_file = TFile.Open(bs_path+'pdf_norm_uncertainties_TBprime.root')
-    sigma_max = 1
-    sigma_min = 1e-5
+    sigma_max = 400
+    sigma_min = 0.6e-4
     mass_min = 1.4
     mass_max = 1.8
 elif 'tprime' in options.signals:
@@ -170,7 +171,7 @@ climits.SetRightMargin(0.05)
 #     cstr = 'LR'
 # else:
 #     cstr = ''
-cstr = options.mod
+cstr = ''#options.mod
 
 gStyle.SetTextFont(42)
 TPT = ROOT.TPaveText(.20, .22, .5, .27,"NDC")
@@ -206,7 +207,7 @@ if not options.blind:
 else:
     print 'Blinded'
     g_mclimit.GetXaxis().SetTitle("m_{"+label+"_{"+cstr+"}} [TeV]")  # NOT GENERIC
-    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
+    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
     g_mclimit.GetYaxis().SetRangeUser(0., 80.)
     g_mclimit.GetXaxis().SetRangeUser(mass_min, mass_max)
     g_mclimit.SetMinimum(sigma_min) #0.005
@@ -317,10 +318,15 @@ g_error = make_smooth_graph(g_mcminus, g_mcplus)
 g_error.SetFillColor( kGreen+1)
 g_error.SetLineColor(0)
 
+g_limit.GetXaxis().SetNdivisions(806)
+g_mclimit.GetXaxis().SetNdivisions(806)
+g_error95.GetXaxis().SetNdivisions(806)
+g_error.GetXaxis().SetNdivisions(806)
+
 if not options.blind:
 
     g_limit.GetXaxis().SetTitle("m_{"+label+"_{"+cstr+"}} [TeV]")  # NOT GENERIC
-    g_limit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
+    g_limit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
     g_limit.GetXaxis().SetTitleSize(0.055)
     g_limit.GetYaxis().SetTitleSize(0.05)
     g_limit.Draw('ap')
@@ -338,7 +344,7 @@ if not options.blind:
 
 else:
     g_mclimit.GetXaxis().SetTitle("m_{"+label+"_{"+cstr+"}} [TeV]")  # NOT GENERIC
-    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}} #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
+    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
     g_limit.GetXaxis().SetTitleSize(0.055)
     g_limit.GetYaxis().SetTitleSize(0.05)
     g_mclimit.Draw("al")
@@ -394,7 +400,7 @@ if not options.blind:
 legend.AddEntry(g_mclimit, "Median expected","l")
 legend.AddEntry(g_error, "68% expected", "f")
 legend.AddEntry(g_error95, "95% expected", "f")
-legend.AddEntry(WPunc, "Theory "+label+"_{"+cstr+"}", "lf")   # NOT GENERIC
+legend.AddEntry(WPunc, "Theory "+label+"_{"+cstr+"}, "+assoc, "lf")   # NOT GENERIC
 # legend.AddEntry(WPunc, "Theory "+label+"_{"+cstr+"} PDF uncertainty", "f")
 
 legend.SetBorderSize(0)
@@ -411,12 +417,12 @@ legend.Draw("same")
 # TPT.Draw()      
 climits.RedrawAxis()
 
-CMS_lumi.extraText = 'Preliminary'
+CMS_lumi.extraText = ''
 CMS_lumi.lumiTextSize     = 0.5
 
 CMS_lumi.cmsTextSize      = 0.8
 CMS_lumi.CMS_lumi(climits, 1, 11)
 
-climits.SaveAs("prelimits_combine_"+options.lumi.replace('.','p')+"fb_"+options.signals[options.signals.find('/')+1:options.signals.find('.')]+'_'+cstr+".pdf")
+climits.SaveAs("limits_combine_"+options.lumi.replace('.','p')+"fb_"+options.signals[options.signals.find('/')+1:options.signals.find('.')]+'_'+options.mod+".pdf")
 
 
