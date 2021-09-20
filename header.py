@@ -10,6 +10,16 @@ import CMS_lumi, tdrstyle
 import pprint
 pp = pprint.PrettyPrinter(indent = 2)
 
+def remakeHisto(histo):
+    #Remakes a 1D histogram so that kPoisson errors can be acessed
+    #Needed to make pulls with data with low bin entries
+    tempHisto = histo.Clone("tempHisto")
+    histo.Reset()
+    for i in range(1,tempHisto.GetNbinsX()+1):
+        histo.SetBinContent(i,tempHisto.GetBinContent(i))
+    histo.SetBinErrorOption(1)
+    return histo
+
 def setSnapshot(d=''):
     # header.executeCmd('combine -M MultiDimFit -d '+base_workspace+' --saveWorkspace --freezeParameters r --setParameters r=0,'+mask_string)
     # f = TFile.Open('higgsCombineTest.MultiDimFit.mH120.root')
@@ -794,6 +804,7 @@ def makeCan(name, tag, histlist, bkglist=[],totalBkg=None,signals=[],colors=[],
         # Otherwise it's a TH1 hopefully
         else:
             titleSize = 0.09
+            hist = remakeHisto(hist)
             alpha = 1
             if dataOff:
                 alpha = 0
@@ -1156,14 +1167,11 @@ def Make_Pull_plot( DATA,BKG):
             sigma = sqrt(FSerr*FSerr + BKGerr*BKGerr)
         else:
             sigma = sqrt(BKGerr*BKGerr)
-        if FScont == 0.0:
-            pull.SetBinContent(ibin, 0.0 )  
-        else:
-            if sigma != 0 :
-                pullcont = (pull.GetBinContent(ibin))/sigma
-                pull.SetBinContent(ibin, pullcont)
-            else :
-                pull.SetBinContent(ibin, 0.0 )
+        if sigma != 0 :
+            pullcont = (pull.GetBinContent(ibin))/sigma
+            pull.SetBinContent(ibin, pullcont)
+        else :
+            pull.SetBinContent(ibin, 0.0 )
     return pull
 
 def Make_up_down(hist):
