@@ -81,7 +81,7 @@ elif 'VL' in options.signals:
     hand = 'VL'
 
 if 'bprime' in options.signals:
-    label = "B'"
+    label = "B"
     assoc = options.mod
     theory_var_file = TFile.Open(bs_path+'pdf_norm_uncertainties_TBprime.root')
     sigma_max = 400
@@ -207,7 +207,7 @@ if not options.blind:
 else:
     print 'Blinded'
     g_mclimit.GetXaxis().SetTitle("m_{"+label+"_{"+cstr+"}} [TeV]")  # NOT GENERIC
-    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
+    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}+"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
     g_mclimit.GetYaxis().SetRangeUser(0., 80.)
     g_mclimit.GetXaxis().SetRangeUser(mass_min, mass_max)
     g_mclimit.SetMinimum(sigma_min) #0.005
@@ -280,7 +280,7 @@ for i,bsmass in enumerate(signal_mass):
     pdf_down = 0
     for y in years:
         if label == 'b*': this_signal_name = 'signal%s%s_%s'%(hand,int(bsmass*1000),y)
-        elif label == "B'": this_signal_name = 'Bprime%s%s_%s'%(hand,int(bsmass*1000),y)
+        elif label == "B": this_signal_name = 'Bprime%s%s_%s'%(hand,int(bsmass*1000),y)
         elif label == "T'": this_signal_name = 'Tprime%s%s_%s'%(hand,int(bsmass*1000),y)
 
         if hand != 'VL':
@@ -326,7 +326,7 @@ g_error.GetXaxis().SetNdivisions(806)
 if not options.blind:
 
     g_limit.GetXaxis().SetTitle("m_{"+label+"_{"+cstr+"}} [TeV]")  # NOT GENERIC
-    g_limit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
+    g_limit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}+"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
     g_limit.GetXaxis().SetTitleSize(0.055)
     g_limit.GetYaxis().SetTitleSize(0.05)
     g_limit.Draw('ap')
@@ -344,7 +344,7 @@ if not options.blind:
 
 else:
     g_mclimit.GetXaxis().SetTitle("m_{"+label+"_{"+cstr+"}} [TeV]")  # NOT GENERIC
-    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
+    g_mclimit.GetYaxis().SetTitle("#sigma_{"+label+"_{"+cstr+"}+"+assoc+"} #times #bf{#it{#Beta}}("+label+"_{"+cstr+"}#rightarrow tW) (pb)") # NOT GENERIC
     g_limit.GetXaxis().SetTitleSize(0.055)
     g_limit.GetYaxis().SetTitleSize(0.05)
     g_mclimit.Draw("al")
@@ -400,7 +400,7 @@ if not options.blind:
 legend.AddEntry(g_mclimit, "Median expected","l")
 legend.AddEntry(g_error, "68% expected", "f")
 legend.AddEntry(g_error95, "95% expected", "f")
-legend.AddEntry(WPunc, "Theory "+label+"_{"+cstr+"}, "+assoc, "lf")   # NOT GENERIC
+legend.AddEntry(WPunc, "Theory "+label+"_{"+cstr+"}+"+assoc, "lf")   # NOT GENERIC
 # legend.AddEntry(WPunc, "Theory "+label+"_{"+cstr+"} PDF uncertainty", "f")
 
 legend.SetBorderSize(0)
