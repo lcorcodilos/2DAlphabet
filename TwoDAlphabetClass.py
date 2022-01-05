@@ -25,6 +25,8 @@ from ROOT import *
 
 gStyle.SetOptStat(0)
 
+fitDiagnosticsOutputName = "fitDiagnosticsTest.root"
+
 class TwoDAlphabet:
     # If you just want to do everything yourself
     def __init__(self):
@@ -201,7 +203,7 @@ class TwoDAlphabet:
             print 'Pre-running '+self.tag+' '+self.name+' to get a better estimate of the transfer function'
             self.workspace.writeToFile(self.projPath+'base_'+self.name+'.root',True)  
             runMLFit([self],'0','5','',skipPlots=True,prerun=True)    
-            prerun_file = TFile.Open(self.projPath+'/fitDiagnostics.root')
+            prerun_file = TFile.Open(os.path.join(self.projPath,fitDiagnosticsOutputName))
             if prerun_file:
                 if prerun_file.GetListOfKeys().Contains('fit_b'):
                     prerun_result = prerun_file.Get('fit_b').floatParsFinal()
@@ -1666,7 +1668,7 @@ class TwoDAlphabet:
         # else:
         post_file = TFile.Open(self.tag+'/postfitshapes_'+fittag+'.root')
         axis_hist = post_file.Get('pass_LOW_'+self.name+'_prefit/data_obs')
-        fd_file = TFile.Open(self.tag+'/fitDiagnostics.root')
+        fd_file = TFile.Open(os.path.join(self.tag,fitDiagnosticsOutputName))
 
         if 'RunII_' in fittag:
             runII = True
@@ -2161,25 +2163,25 @@ def runMLFit(twoDs,rMin,rMax,systsToSet,skipPlots=False,prerun=False):
     else: blind_option = '--setParameters r=1'
 
     # Run Combine
-    FitDiagnostics_command = 'combine -M FitDiagnostics -d '+card_name+' '+blind_option+' --saveWorkspace --cminDefaultMinimizerStrategy 0 ' + sig_option +verbose 
+    FitDiagnostics_command = 'combine -M FitDiagnostics -d '+card_name+' '+blind_option+' --saveWorkspace --cminDefaultMinimizerStrategy 0 ' + sig_option +verbose + ' --saveShapes' 
 
     with header.cd(projDir):
         command_saveout = open('FitDiagnostics_command.txt','w')
         command_saveout.write(FitDiagnostics_command)
         command_saveout.close()
 
-        if os.path.isfile('fitDiagnostics.root'):
-            header.executeCmd('rm fitDiagnostics.root')
+        if os.path.isfile(fitDiagnosticsOutputName):
+            header.executeCmd('rm '+fitDiagnosticsOutputName)
 
         header.executeCmd(FitDiagnostics_command)
 
-        if not os.path.isfile('fitDiagnostics.root'):
-            print "Combine failed and never made fitDiagnostics.root. Quitting..."
+        if not os.path.isfile(fitDiagnosticsOutputName):
+            print "Combine failed and never made " + fitDiagnosticsOutputName +" Quitting..."
             for i in twoDs:
                 del i
             quit()
 
-        diffnuis_cmd = 'python $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/test/diffNuisances.py fitDiagnostics.root --abs -g nuisance_pulls.root'
+        diffnuis_cmd = 'python $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/test/diffNuisances.py ' + fitDiagnosticsOutputName + ' --abs -g nuisance_pulls.root'
         header.executeCmd(diffnuis_cmd)
 
         systematic_analyzer_cmd = 'python $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/test/systematicsAnalyzer.py '+card_name+' --all -f html > systematics_table.html'
@@ -2199,7 +2201,7 @@ def runMLFit(twoDs,rMin,rMax,systsToSet,skipPlots=False,prerun=False):
             rerun_config = header.dictCopy(twoD.inputConfig)
 
             try:
-                coeffs_final = TFile.Open(projDir+'/fitDiagnostics.root').Get('fit_'+fittag).floatParsFinal()
+                coeffs_final = TFile.Open(os.path.join(projDir,fitDiagnosticsOutputName)).Get('fit_'+fittag).floatParsFinal()
                 coeffIter_final = coeffs_final.createIterator()
                 coeff_final = coeffIter_final.Next()
                 while coeff_final:
@@ -2228,12 +2230,12 @@ def runMLFit(twoDs,rMin,rMax,systsToSet,skipPlots=False,prerun=False):
 
     if not skipPlots:
         with header.cd(projDir):
-            bshapes_cmd = 'PostFit2DShapesFromWorkspace -w higgsCombineTest.FitDiagnostics.mH120.root -o postfitshapes_b.root -f fitDiagnostics.root:fit_b --postfit --sampling --samples 100 --print 2> PostFitShapes2D_stderr_b.txt'
+            bshapes_cmd = 'PostFit2DShapesFromWorkspace -w higgsCombineTest.FitDiagnostics.mH120.root -o postfitshapes_b.root -f ' + fitDiagnosticsOutputName + ':fit_b --postfit --sampling --samples 100 --print 2> PostFitShapes2D_stderr_b.txt'
             header.executeCmd(bshapes_cmd)
-            sshapes_cmd = 'PostFit2DShapesFromWorkspace -w higgsCombineTest.FitDiagnostics.mH120.root -o postfitshapes_s.root -f fitDiagnostics.root:fit_s --postfit --sampling --samples 100 --print 2> PostFitShapes2D_stderr_s.txt'
+            sshapes_cmd = 'PostFit2DShapesFromWorkspace -w higgsCombineTest.FitDiagnostics.mH120.root -o postfitshapes_s.root -f ' + fitDiagnosticsOutputName + ':fit_s --postfit --sampling --samples 100 --print 2> PostFitShapes2D_stderr_s.txt'
             header.executeCmd(sshapes_cmd)
 
-            covMtrx_File = TFile.Open('fitDiagnostics.root')
+            covMtrx_File = TFile.Open(fitDiagnosticsOutputName)
             fit_result = covMtrx_File.Get("fit_b")
             if hasattr(fit_result,'correlationMatrix'):
                 corrMtrx = header.reducedCorrMatrixHist(fit_result)
